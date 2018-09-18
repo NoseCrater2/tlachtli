@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity  {
         mBallSpd.y = 0;
 
 
-        bolaView = new Bola(this,mBallPos.x,mBallPos.y,5);
+        bolaView = new Bola(this,mBallPos.x,mBallPos.y,20);
 
         mainView.addView(bolaView);
         bolaView.invalidate();
@@ -99,51 +99,45 @@ public class MainActivity extends AppCompatActivity  {
     }
 
     @Override
-    public void onResume() //app moved to foreground (also occurs at app startup)
+    public void onResume()
     {
-        //create timer to move ball to new position
+
         mTmr = new Timer();
         mTsk = new TimerTask() {
             public void run() {
-                //if debugging with external device,
-                //  a cat log viewer will be needed on the device
-                android.util.Log.d(
-                        "TiltBall","Timer Hit - " + mBallPos.x + ":" + mBallPos.y);
-                //move ball based on current speed
+
                 mBallPos.x += mBallSpd.x;
                 mBallPos.y += mBallSpd.y;
-                //if ball goes off screen, reposition to opposite side of screen
-                if (mBallPos.x > mScrWidth) mBallPos.x=0;
-                if (mBallPos.y > mScrHeight) mBallPos.y=0;
-                if (mBallPos.x < 0) mBallPos.x=mScrWidth;
-                if (mBallPos.y < 0) mBallPos.y=mScrHeight;
-                //update ball class instance
+
+                if (mBallPos.x > mScrWidth) mBallPos.x=mScrWidth-20;
+                if (mBallPos.y > mScrHeight) mBallPos.y=mScrHeight-20;
+                if (mBallPos.x < 0) mBallPos.x=0+20;
+                if (mBallPos.y < 0) mBallPos.y=0+20;
+
                 bolaView.mX = mBallPos.x;
                 bolaView.mY = mBallPos.y;
 
 
-                //redraw ball. Must run in background thread to prevent thread lock.
+
                 RedrawHandlar.post(new Runnable() {
                     public void run() {
                         bolaView.invalidate();
                     }});
             }}; // TimerTask
 
-        mTmr.schedule(mTsk,10,10); //start timer
+        mTmr.schedule(mTsk,10,10);
         super.onResume();
-    } // onResume
-
-    @Override
-    public void onDestroy() //main thread stopped
-    {
-        super.onDestroy();
-        System.runFinalizersOnExit(true); //wait for threads to exit before clearing app
-        android.os.Process.killProcess(android.os.Process.myPid());  //remove app from memory
     }
 
-    //listener for config change.
-    //This is called when user tilts phone enough to trigger landscape view
-    //we want our app to stay in portrait view, so bypass event
+    @Override
+    public void onDestroy()
+    {
+        super.onDestroy();
+        System.runFinalizersOnExit(true);
+        android.os.Process.killProcess(android.os.Process.myPid());
+    }
+
+
     @Override
     public void onConfigurationChanged(Configuration newConfig)
     {
